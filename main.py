@@ -1,63 +1,54 @@
-import json
-from unicodedata import name
-import requests
-import pandas as pd
-import psycopg2
+from urllib import response
+from typing import List
 from fastapi import FastAPI
+import databases
+import sqlalchemy
+from pydantic import BaseModel
+ 
+DATABASE_URL = "postgresql://gqrvrmkxscgslz:f82c919e824d31c3625686bb085e8cb52778ab2bc0161f2866661e071062c891@ec2-3-211-221-185.compute-1.amazonaws.com:5432/d16dj3pn53scrk"
+
+database = databases.Database(DATABASE_URL)
+
+metadata = sqlalchemy.MetaData()
+
+menus = sqlalchemy.Table(
+    "menus",
+    metadata,
+    sqlalchemy.Column("nome", sqlalchemy.String, primary_key=True),
+    sqlalchemy.Column("img", sqlalchemy.String),
+)
+
+engine = sqlalchemy.create_engine(
+    DATABASE_URL
+)
+
+metadata.create_all(engine)
+
+class Menu(BaseModel):
+    nome: str
+    img: str
 
 
 app = FastAPI()
 
-def conecta_db():
-    con1 = psycopg2.connect(host='localhost',
-                          database='foodpi',
-                          user='postgres',
-                          password='00019008')
-    return con1
 
-# Função Consulta Tabela Banco
-def consulta_db(sql):
-    con = conecta_db()
-    cur = con.cursor()
-    cur.execute(sql)
-    recset = cur.fetchall()
-    registros = []
-    for rec in recset:
-        registros.append(rec)
-    con.close()
-    return registros
+@app.on_event("startup")
+async def startup():
+    await database.connect()
 
 
-@app.get("/")
-def home():
-    return "É assim que era pra funcionar?"
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
+  
 
-@app.get("/usuarios")
-def usr():
-    reg = consulta_db('select * from usuarios')
-    df_bd = pd.DataFrame(reg, columns=['uId','uNome', 'uTelefone','uEndereco', 'uEmail', 'uUsername', 'uSenha'])
-    print(df_bd)
+@app.get("/menu/", response_model=List[Menu])   
+async def read_restaurantes():
+    query = menus.select()
+    return await database.fetch_all(query) 
 
-    return reg
-
-@app.get("/user1/{uId_usr}")
-def usr(uId_usr:str):
-    sql = "select * from usuarios where id = "+uId_usr
-    reg = consulta_db(sql)
-    df_bd = pd.DataFrame(reg, columns=['uId','uNome', 'uTelefone','uEndereco', 'uEmail', 'uUsername', 'uSenha'])
-    print(df_bd)
-
-    return reg
-
-
-#@app.get("/user2/{codigo_usr},{nome}")
-#def usr(codigo_usr:str,nome : str):
- #   sql = "select * from cliente where codigo = "+codigo_usr+" AND nome = '"+nome+"'"
-  #  reg = consulta_db(sql)
-   # df_bd = pd.DataFrame(reg, columns=['codigo','nome','endereco', 'telefone'])
-    #print(df_bd)
-
-    #return reg
-
-reg = consulta_db('select * from usuarios')
-print(reg)
+@app.post("/menu/", response_model=Menu)   
+async def create_restaurantes(menu: Menu):
+    query = menus.insert().values(nome=menu.name, img=menu.img)
+    last_record_id = await database.execute(query)
+    return {**menu.dict(), "id": last_record_id}
