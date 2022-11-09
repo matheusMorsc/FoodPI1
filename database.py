@@ -2,7 +2,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-engine=create_engine("postgresql://{postgres}:{00019008}@localhost/{foodpi}",
+engine=create_engine("postgresql://postgres:root@localhost/foodpi",
     echo=True
 )
 
