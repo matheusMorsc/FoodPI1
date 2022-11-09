@@ -63,8 +63,10 @@ async def create_restaurantes(menu: MenuIn):
     last_record_id = await database.execute(query)
     return {**menu.dict(), "id": last_record_id}
 
-@app.put("menu/", response_model=Menu)
-def update_an_item(menu_id:int,menu:Menu):
-    menu_to_update=database.query(models.Item).filter(models.Item.id==menu_id).first()
-    
-    return menu_to_update
+@app.put("/menu/", response_model=Menu)   
+async def update_restaurantes(menu: MenuIn):
+    query = menus.insert().values(nome=menu.nome, img=menu.img)
+    last_record_id = await database.execute(query)
+    return {**menu.dict(), "id": last_record_id}
+
+
