@@ -4,6 +4,7 @@ from fastapi import FastAPI
 import databases
 import sqlalchemy
 from pydantic import BaseModel
+import models
  
 DATABASE_URL = "postgresql://qvqtkcccqbhixf:07767eb05b3f44bbfea04d029da3a3ac390e7dc9122331d497c8ad1482e1c7f6@ec2-107-23-76-12.compute-1.amazonaws.com:5432/d6qrgl98nj9om6"
 
@@ -62,4 +63,8 @@ async def create_restaurantes(menu: MenuIn):
     last_record_id = await database.execute(query)
     return {**menu.dict(), "id": last_record_id}
 
+@app.put("menu/", response_model=MenuIn)
+def update_an_item(menu_id:int,menu:Menu):
+    menu_to_update=database.query(models.Item).filter(models.Item.id==menu_id).first()
     
+    return menu_to_update
