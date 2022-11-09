@@ -6,7 +6,7 @@ import sqlalchemy
 from pydantic import BaseModel
 import models
  
-DATABASE_URL = "postgresql://qvqtkcccqbhixf:07767eb05b3f44bbfea04d029da3a3ac390e7dc9122331d497c8ad1482e1c7f6@ec2-107-23-76-12.compute-1.amazonaws.com:5432/d6qrgl98nj9om6"
+DATABASE_URL = "postgresql://ftrhsjtstmpeje:17df4f3741976fb20e3905810153598ba865061e72b65f7954a94832f1231c92@ec2-18-215-41-121.compute-1.amazonaws.com:5432/d3am4gch1nbf8m"
 
 database = databases.Database(DATABASE_URL)
 
@@ -64,7 +64,7 @@ async def create_restaurantes(menu: MenuIn):
     return {**menu.dict(), "id": last_record_id}
 
 @app.put("/menu/", response_model=Menu)   
-async def update_restaurantes(menu: MenuIn):
+async def update_restaurantes(menu: Menu):
     query = menus.insert().values(nome=menu.nome, img=menu.img)
     last_record_id = await database.execute(query)
     return {**menu.dict(), "id": last_record_id}
