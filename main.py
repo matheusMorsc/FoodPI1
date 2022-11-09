@@ -100,14 +100,3 @@ async def read_item_by_id(id:int):
     query = itens.select().where(itens.c.id == id)
     return await database.fetch_all(query)
 
-@app.post("/item/", response_model=Item)   
-async def create_item(item: ItemIn):
-    query = itens.insert().values(title=item.title, image=item.image, price=item.price, description=item.description)
-    last_record_id2 = await database.execute(query)
-    return {**item.dict(), "id": last_record_id2}
-
-@app.put("/item/", response_model=Item)   
-async def update_item(item: ItemIn):
-    query = itens.insert().values(title=item.title, image=item.image, price=item.price, description=item.description)
-    last_record_id2 = await database.execute(query)
-    return {**item.dict(), "id": last_record_id2}
