@@ -114,3 +114,20 @@ async def create_item(item: ItemIn):
     query = itens.insert().values(title=item.title, image=item.image, price=item.price, description=item.description, subid=item.subid)
     last_record_id2 = await database.execute(query)
     return {**item.dict(), "id": last_record_id2}
+
+## Login
+
+class Request(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class Response(BaseModel):
+    username: str
+    email: str
+
+@app.post("/login", response_model=Response)
+async def login(req: Request):
+    if req.username == "testdriven.io" and req.password == "testdriven.io":
+        return req
+    return {"message": "Authentication Failed"}
