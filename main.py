@@ -118,6 +118,3 @@ async def create_item(item: ItemIn):
 
 
 ## Cadastro e login 
-@app.post("/login/")
-async def login(username: str = Form(), password: str = Form()):
-    return {"username": username}
