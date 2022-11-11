@@ -95,12 +95,12 @@ async def read_items(token: str = Depends(oauth2_scheme)):
   
 @app.get("/cadastro/", response_model=List[Cadastro])   
 async def read_cadastro():
-    query = menus.select()
+    query = Cadastro.select()
     return await database.fetch_all(query) 
 
 @app.post("/cadastro/", response_model=Cadastro)   
 async def create_cadastros(cadastro: CadastroIn):
-    query = menus.insert().values(nome=cadastro.nome, email=cadastro.email, senha=cadastro.senha)
+    query = cadastro.insert().values(nome=cadastro.nome, email=cadastro.email, senha=cadastro.senha)
     last_record_id = await database.execute(query)
     return {**cadastro.dict(), "id": last_record_id}
 
