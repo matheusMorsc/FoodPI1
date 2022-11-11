@@ -72,19 +72,15 @@ class ItemIn(BaseModel):
     description: str
     price: str
     image: str
-    
-class Login(BaseModel):
-    id: int
-    nome: str
-    senha: str
-    
+
 app = FastAPI()
 ## LOGIN 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 
 @app.get("/login/")
-async def read_login( response_model=List[Menu]):
-   query = menus.select()
-   return await database.fetch_all(query) 
+async def read_items(token: str = Depends(oauth2_scheme)):
+    return {"token": token}
 
 
 ## INCICIO E FIM
