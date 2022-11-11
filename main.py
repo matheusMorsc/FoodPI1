@@ -35,6 +35,16 @@ itens = sqlalchemy.Table(
     sqlalchemy.Column("image", sqlalchemy.String),
 )
 
+cadastros = sqlalchemy.Table(
+    "cadastros",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("nome", sqlalchemy.String),
+    sqlalchemy.Column("email", sqlalchemy.String),
+    sqlalchemy.Column("senha", sqlalchemy.String),
+    
+)
+
 engine = sqlalchemy.create_engine(
     DATABASE_URL
 )
@@ -92,15 +102,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 async def read_items(token: str = Depends(oauth2_scheme)):
     return {"token": token}
 
-  
+## Cadastro 
 @app.get("/cadastro/", response_model=List[Cadastro])   
 async def read_cadastro():
-    query = Cadastro.select()
+    query = cadastros.select()
     return await database.fetch_all(query) 
 
 @app.post("/cadastro/", response_model=Cadastro)   
 async def create_cadastros(cadastro: CadastroIn):
-    query = cadastro.insert().values(nome=cadastro.nome, email=cadastro.email, senha=cadastro.senha)
+    query = cadastros.insert().values(nome=cadastro.nome, email=cadastro.email, senha=cadastro.senha)
     last_record_id3 = await database.execute(query)
     return {**cadastro.dict(), "id": last_record_id3}
 
