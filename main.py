@@ -72,15 +72,37 @@ class ItemIn(BaseModel):
     description: str
     price: str
     image: str
+    
+class Cadastro(BaseModel):
+    id: int
+    nome: str
+    email: str
+    senha: str 
+
+class CadastroIn(BaseModel):
+    nome: str
+    email: str
+    senha: str
 
 app = FastAPI()
 ## LOGIN 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-
 @app.get("/login/")
 async def read_items(token: str = Depends(oauth2_scheme)):
     return {"token": token}
+
+  
+@app.get("/cadastro/", response_model=List[Cadastro])   
+async def read_cadastro():
+    query = menus.select()
+    return await database.fetch_all(query) 
+
+@app.post("/cadastro/", response_model=Cadastro)   
+async def create_cadastros(cadastro: CadastroIn):
+    query = menus.insert().values(nome=cadastro.nome, email=cadastro.email, senha=cadastro.senha)
+    last_record_id = await database.execute(query)
+    return {**cadastro.dict(), "id": last_record_id}
 
 
 ## INCICIO E FIM
