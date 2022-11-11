@@ -1,13 +1,10 @@
 from urllib import response
 from typing import List
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 import databases
 import sqlalchemy
 from pydantic import BaseModel
-from fastapi_login import LoginManager
-from fastapi import Depends
-from fastapi.security import OAuth2PasswordRequestForm
-from fastapi_login.exceptions import InvalidCredentialsException
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
  
 DATABASE_URL = "postgresql://ftrhsjtstmpeje:17df4f3741976fb20e3905810153598ba865061e72b65f7954a94832f1231c92@ec2-18-215-41-121.compute-1.amazonaws.com:5432/d3am4gch1nbf8m"
 
@@ -76,40 +73,15 @@ class ItemIn(BaseModel):
     price: str
     image: str
 
-
-SECRET = 'foodpi'
-
 app = FastAPI()
+## LOGIN 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-manager = LoginManager(SECRET, token_url='/auth/token')
-fake_db = {'johndoe@e.mail': {'password': 'hunter2'}}
+@app.get("/items/")
+async def read_items(token: str = Depends(oauth2_scheme)):
+    return {"token": token}
 
-@manager.user_loader()
-def load_user(email: str):  # could also be an asynchronous function
-    user = fake_db.get(email)
-    return user
-
-# the python-multipart package is required to use the OAuth2PasswordRequestForm
-@app.post('/auth/token')
-def login(data: OAuth2PasswordRequestForm = Depends()):
-    email = data.username
-    password = data.password
-
-    user = load_user(email)  # we are using the same function to retrieve the user
-    if not user:
-        raise InvalidCredentialsException  # you can also use your own HTTPException
-    elif password != user['password']:
-        raise InvalidCredentialsException
-    
-    access_token = manager.create_access_token(
-        data=dict(sub=email)
-    )
-    return {'access_token': access_token, 'token_type': 'bearer'}
-
-@app.get('/protected')
-def protected_route(user=Depends(manager)):
-    ...
 
 ## INCICIO E FIM
 
@@ -152,5 +124,5 @@ async def create_item(item: ItemIn):
     last_record_id2 = await database.execute(query)
     return {**item.dict(), "id": last_record_id2}
 
-## Login
+
 
