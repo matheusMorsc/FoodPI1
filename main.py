@@ -199,7 +199,6 @@ async def create_pedidos(pedido: PedidoIn):
     last_record_id4 = await database.execute(query)
     return {**pedido.dict(), "id": last_record_id4}
 
-@app.post("/pedidoP/", response_model=PedidoIn)
-async def create_pedidoP(pedido: PedidoIn):
-    return pedido
+def get_pedido_by_description(description: str):
+    return Pedido.query(BaseModel.Pedido)
 
