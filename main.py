@@ -1,11 +1,10 @@
-from urllib import response
 from typing import List
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Request
 import databases
+import requests
 import sqlalchemy
 from pydantic import BaseModel
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
- 
+
 DATABASE_URL = "postgresql://ftrhsjtstmpeje:17df4f3741976fb20e3905810153598ba865061e72b65f7954a94832f1231c92@ec2-18-215-41-121.compute-1.amazonaws.com:5432/d3am4gch1nbf8m"
 
 database = databases.Database(DATABASE_URL)
@@ -45,11 +44,25 @@ cadastros = sqlalchemy.Table(
     
 )
 
+pedidos = sqlalchemy.Table(
+    "pedidos",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("subid", sqlalchemy.Integer),
+    sqlalchemy.Column("title", sqlalchemy.String),
+    sqlalchemy.Column("description", sqlalchemy.String),
+    sqlalchemy.Column("price", sqlalchemy.String),
+    sqlalchemy.Column("image", sqlalchemy.String),
+    
+)
+
 engine = sqlalchemy.create_engine(
     DATABASE_URL
 )
 
 metadata.create_all(engine)
+
+app = FastAPI()
 
 class Menu(BaseModel):
     id: int
@@ -82,7 +95,11 @@ class ItemIn(BaseModel):
     description: str
     price: str
     image: str
-    
+
+class new_user(BaseModel):
+    username: str
+    password: str
+
 class Cadastro(BaseModel):
     id: int
     nome: str
@@ -94,29 +111,24 @@ class CadastroIn(BaseModel):
     email: str
     senha: str
 
+class Pedido(BaseModel):
+    id: int
+    subid: int
+    title: str
+    description: str
+    price: str
+    image: str
+
+class PedidoIn(BaseModel):
+    subid: int
+    title: str
+    description: str
+    price: str
+    image: str
+
 app = FastAPI()
-## LOGIN 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-@app.get("/login/")
-async def read_items(token: str = Depends(oauth2_scheme)):
-    return {"token": token}
-
-## Cadastro 
-@app.get("/cadastro/", response_model=List[Cadastro])   
-async def read_cadastro():
-    query = cadastros.select()
-    return await database.fetch_all(query) 
-
-@app.post("/cadastro/", response_model=Cadastro)   
-async def create_cadastros(cadastro: CadastroIn):
-    query = cadastros.insert().values(nome=cadastro.nome, email=cadastro.email, senha=cadastro.senha)
-    last_record_id3 = await database.execute(query)
-    return {**cadastro.dict(), "id": last_record_id3}
-
-
-## INCICIO E FIM
-
+## INICIALIZAÇÃO DO BANCO
 @app.on_event("startup")
 async def startup():
     await database.connect()
@@ -126,7 +138,6 @@ async def shutdown():
     await database.disconnect()
     
 ## RESTAURANTES
-  
 @app.get("/menu/", response_model=List[Menu])   
 async def read_restaurantes():
     query = menus.select()
@@ -139,7 +150,6 @@ async def create_restaurantes(menu: MenuIn):
     return {**menu.dict(), "id": last_record_id}
 
 ## ITENS
-
 @app.get("/item/", response_model=List[Item])   
 async def read_item():
     query = itens.select()
@@ -157,4 +167,39 @@ async def create_item(item: ItemIn):
     return {**item.dict(), "id": last_record_id2}
 
 
+# LOGIN 
+@app.get("/usuarios/", response_model=List[Cadastro])   
+async def read_usuarios():
+    query = cadastros.select()
+    return await database.fetch_all(query) 
+
+## CADASTRO
+@app.post("/cadastro/", response_model=Cadastro)   
+async def create_cadastros(cadastro: CadastroIn):
+    query = cadastros.insert().values(nome=cadastro.nome, email=cadastro.email, senha=cadastro.senha)
+    last_record_id3 = await database.execute(query)
+    return {**cadastro.dict(), "id": last_record_id3}
+
+
+## PEDIDO
+
+@app.get("/pedido/", response_model=List[Pedido])   
+async def read_pedidos():
+    query = pedidos.select()
+    return await database.fetch_all(query)
+
+@app.get("/pedido/{subid}", response_model=List[Pedido])   
+async def read_item_by_id(subid:int):
+    query = pedidos.select().where(pedidos.c.subid == subid)
+    return await database.fetch_all(query) 
+
+@app.post("/pedido/", response_model=Pedido)   
+async def create_pedidos(pedido: PedidoIn):
+    query = pedidos.insert().values(title=pedido.title, image=pedido.image, price=pedido.price, description=pedido.description, subid=pedido.subid)
+    last_record_id4 = await database.execute(query)
+    return {**pedido.dict(), "id": last_record_id4}
+
+@app.post("/pedidoP/", response_model=PedidoIn)
+async def create_pedidoP(pedido: PedidoIn):
+    return pedido
 
